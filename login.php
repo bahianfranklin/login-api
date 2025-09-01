@@ -1,40 +1,64 @@
 <?php
-    session_start();
-    require 'db.php';
+session_start();
+require 'db.php';
 
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $username = trim($_POST['username']);
-            $password = trim($_POST['password']);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-            $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->bind_param("s", $username);
-            $stmt->execute();
+    // $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
 
-            $result = $stmt->get_result();
-            $user = $result->fetch_assoc();
+    // $stmt = $conn->prepare("
+    // SELECT id, name, address, contact, birthday, email, username, role, status, profile_pic 
+    // FROM users 
+    // WHERE username = ?
+    // ");
 
-            
-            if ($user && password_verify($password, $user['password'])) {
-                // ✅ Save user info to session
-                $_SESSION['user'] = $user;
-                $_SESSION['user_id'] = $user['id'];
+    // $stmt->bind_param("s", $username);
+    // $stmt->execute();
 
-                // ✅ Insert login history
-                $ip = $_SERVER['REMOTE_ADDR'];
-                $stmtLog = $conn->prepare("INSERT INTO user_logs (user_id, login_time, ip_address) VALUES (?, NOW(), ?)");
-                $stmtLog->bind_param("is", $user['id'], $ip);
-                $stmtLog->execute();
+    // $result = $stmt->get_result();
+    // $user = $result->fetch_assoc();
 
-                $_SESSION['log_id'] = $conn->insert_id;
+    $stmt = $conn->prepare("
+    SELECT id, name, address, contact, birthday, email, username, role, status, profile_pic, password
+    FROM users 
+    WHERE username = ?
+    ");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
 
-                // Redirect to dashboard
-                header("Location: view.php");
-                exit();
-            } else {
-                $error = "Invalid username or password!";
-            }
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+
+    if ($user && is_array($user)) {
+        // ✅ Check if account is inactive
+        if ($user['status'] === 'inactive') {
+            $error = "Your account is inactive. Please contact admin.";
+        } elseif (password_verify($password, $user['password'])) {
+            // ✅ Save user info to session
+            $_SESSION['user'] = $user;
+            $_SESSION['user_id'] = $user['id'];
+
+            // ✅ Insert login history
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $stmtLog = $conn->prepare("INSERT INTO user_logs (user_id, login_time, ip_address) VALUES (?, NOW(), ?)");
+            $stmtLog->bind_param("is", $user['id'], $ip);
+            $stmtLog->execute();
+
+            $_SESSION['log_id'] = $conn->insert_id;
+
+            // Redirect to dashboard
+            header("Location: view.php");
+            exit();
+        } else {
+            $error = "Invalid username or password!";
         }
-?>
+    } else {
+        $error = "Invalid username or password!";
+    }
+}
+?> 
 <!DOCTYPE html>
 <html lang="en">
     <head>

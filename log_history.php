@@ -60,6 +60,47 @@
 
     $stmt->execute();
     $result = $stmt->get_result();
+
+    // --- PAGINATION SETUP ---
+    // Get limit per page (default 10)
+    $perPage = isset($_GET['limit']) ? $_GET['limit'] : 5;
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+    // Clone SQL for counting total records
+    $countSql = "SELECT COUNT(*) as total FROM user_logs l JOIN users u ON l.user_id = u.id";
+    if (!empty($conditions)) {
+        $countSql .= " WHERE " . implode(" AND ", $conditions);
+    }
+
+    $countStmt = $conn->prepare($countSql);
+    if (!empty($params)) {
+        $countStmt->bind_param($types, ...$params);
+    }
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $totalRecords = $countResult->fetch_assoc()['total'];
+
+    // Compute total pages
+    if ($perPage === "all") {
+        $totalPages = 1;
+        $offset = 0;
+    } else {
+        $perPage = intval($perPage);
+        $totalPages = ceil($totalRecords / $perPage);
+        $offset = ($page - 1) * $perPage;
+    }
+
+    // Final SQL with LIMIT
+    $sql .= ($perPage === "all") ? "" : " LIMIT $offset, $perPage";
+
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -105,27 +146,101 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php 
-                    $counter = 1; 
-                    while ($row = $result->fetch_assoc()): 
-                        $login_time = date("Y-m-d h:i:s A", strtotime($row['login_time']));
-                        $logout_time = $row['logout_time'] ? date("Y-m-d h:i:s A", strtotime($row['logout_time'])) : '---';
-                    ?>
-                    <tr>
-                        <td><?= $counter ?></td>
-                        <td><?= htmlspecialchars($row['fullname']) ?></td>
-                        <td><?= htmlspecialchars($row['username']) ?></td>
-                        <td><?= $login_time ?></td>
-                        <td><?= $logout_time ?></td>
-                        <td><?= htmlspecialchars($row['ip_address']) ?></td>
-                    </tr>
-                    <?php 
-                    $counter++;
-                    endwhile; 
-                    ?>
+                        <?php 
+                        $counter = 1; 
+                        while ($row = $result->fetch_assoc()): 
+                            $login_time = date("Y-m-d h:i:s A", strtotime($row['login_time']));
+                            $logout_time = $row['logout_time'] ? date("Y-m-d h:i:s A", strtotime($row['logout_time'])) : '---';
+                        ?>
+                        <tr>
+                            <td><?= $offset + $counter ?></td>
+                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                            <td><?= htmlspecialchars($row['username']) ?></td>
+                            <td><?= $login_time ?></td>
+                            <td><?= $logout_time ?></td>
+                            <td><?= htmlspecialchars($row['ip_address']) ?></td>
+                        </tr>
+                        <?php 
+                        $counter++;
+                        endwhile; 
+                        ?>
                 </tbody>
             </table>
+            <br>
+            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
 
+                <!-- Pagination links -->
+                <nav>
+                    <ul class="pagination mb-0">
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page-1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>&from=<?= $from ?>&to=<?= $to ?>">Previous</a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php for ($i=1; $i <= $totalPages; $i++): ?>
+                            <li class="page-item <?= ($i==$page) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=<?= $i ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>&from=<?= $from ?>&to=<?= $to ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $totalPages): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page+1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>&from=<?= $from ?>&to=<?= $to ?>">Next</a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
+
+                <!-- Page Dropdown -->
+                <form method="get" class="d-inline ms-3">
+                    <input type="hidden" name="limit" value="<?= $perPage ?>">
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+                    <input type="hidden" name="from" value="<?= htmlspecialchars($from) ?>">
+                    <input type="hidden" name="to" value="<?= htmlspecialchars($to) ?>">
+
+                    <label for="pageSelect">Page</label>
+                    <select name="page" id="pageSelect" onchange="this.form.submit()">
+                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                            <option value="<?= $i ?>" <?= ($i == $page) ? 'selected' : '' ?>>
+                                <?= "Page $i of $totalPages" ?>
+                            </option>
+                        <?php endfor; ?>
+                    </select>
+                </form>
+
+                <!-- Dropdown for limit -->
+                <form method="get" class="d-flex align-items-center ms-2">
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+                    <input type="hidden" name="from" value="<?= htmlspecialchars($from) ?>">
+                    <input type="hidden" name="to" value="<?= htmlspecialchars($to) ?>">
+                    <input type="hidden" name="page" value="1">
+                    <label class="me-2">Show</label>
+                    <select name="limit" class="form-select w-auto" onchange="this.form.submit()">
+                        <option value="5" <?= ($perPage==5)?'selected':'' ?>>5</option>
+                        <option value="10" <?= ($perPage==10)?'selected':'' ?>>10</option>
+                        <option value="25" <?= ($perPage==25)?'selected':'' ?>>25</option>
+                        <option value="50" <?= ($perPage==50)?'selected':'' ?>>50</option>
+                        <option value="100" <?= ($perPage==100)?'selected':'' ?>>100</option>
+                        <option value="all" <?= ($perPage==='all')?'selected':'' ?>>Show All</option>
+                    </select>
+                    <label class="ms-2">entries</label>
+                </form>
+           
+
+                <!-- Export Dropdown -->
+                <form method="get" action="export_log_history.php" class="d-inline">
+                    <label>Export:
+                        <select id="exportSelect" class="form-select d-inline-block w-auto" onchange="if(this.value) window.location.href=this.value;">
+                            <option value="">-- Select --</option>
+                            <option value="export_log_history.php?type=csv">CSV</option>
+                            <option value="export_log_history.php?type=excel">Excel</option>
+                            <option value="export_log_history.php?type=pdf">PDF</option>
+                        </select>
+                    </label>
+                </form>
+            </div> 
+            <br>
             <a href="view.php" class="btn btn-primary">BACK</a>
         </div>
     </body>

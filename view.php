@@ -1,4 +1,4 @@
-    <!-- ✅ Get data in Database -->
+<!-- ✅ Get data in Database -->
 <?php
     session_start();
 
@@ -67,9 +67,10 @@
 <html lang="en">
     <head>
     <meta charset="UTF-8">
-    <title>Welcome | Contacts Details</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <title>Welcome | Contacts Details</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     </head>
     <body class="container mt-4">
 
@@ -93,11 +94,40 @@
 
                 <!-- Hidden details (dropdown) -->
                 <div class="collapse mt-3" id="userDetails">
+
+                   <!-- Profile Picture -->
+                    <?php 
+                        $profilePath = "uploads/" . $user['profile_pic']; 
+                        if (!empty($user['profile_pic']) && file_exists($profilePath)): ?>
+                            <div class="mb-3 text-center">
+                                <img src="<?= $profilePath ?>?t=<?= time(); ?>" 
+                                    alt="Profile Picture" 
+                                    class="img-thumbnail rounded-circle" 
+                                    style="width:150px; height:150px; object-fit:cover;">
+                            </div>
+                        <?php else: ?>
+                            <div class="mb-3 text-center">
+                                <img src="uploads/default.png" 
+                                    class="rounded-circle border border-2" 
+                                    style="width:120px; height:120px; object-fit:cover;">
+                            </div>
+                        <?php endif; 
+                    ?>
+
                     <p><strong>Address:</strong> <?= htmlspecialchars($user['address']); ?></p>
                     <p><strong>Contact:</strong> <?= htmlspecialchars($user['contact']); ?></p>
+                    <p><strong>Birthday:</strong> 
+                        <?= !empty($user['birthday']) ? date("F d, Y", strtotime($user['birthday'])) : "—"; ?>
+                    </p>
+                    <p><strong>Email:</strong> <?= htmlspecialchars($user['email']); ?></p>
                     <p><strong>Username:</strong> <?= htmlspecialchars($user['username']); ?></p>
+                    <p><strong>Role:</strong> <?= htmlspecialchars($user['role']); ?></p>
+                    <p><strong>Status:</strong> <?= htmlspecialchars($user['status']); ?></p>
+
+                    <a href="edit_user.php?id=<?= $user['id']; ?>" class="btn btn-primary">Edit</a>
                     <a href="logout.php" class="btn btn-danger">Logout</a>
                 </div>
+
             </div>
         </div>
 
@@ -170,7 +200,6 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        <br>
         <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
                     <!-- ✅ Pagination controls -->
                     <nav>
@@ -254,5 +283,7 @@
         </div>
         <br>
         <a href="log_history.php">LOG HISTORY</a>
+        <a href="users.php">USER INFORMATION</a>
+        <a href="directory.php">COMPANY DIRECTORY</a>
     </body>
 </html>
