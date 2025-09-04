@@ -124,7 +124,7 @@
                     <p><strong>Role:</strong> <?= htmlspecialchars($user['role']); ?></p>
                     <p><strong>Status:</strong> <?= htmlspecialchars($user['status']); ?></p>
 
-                    <a href="edit_user.php?id=<?= $user['id']; ?>" class="btn btn-primary">Edit</a>
+                    <a href="edit_user-profile.php?id=<?= $user['id']; ?>" class="btn btn-primary">Edit</a>
                     <a href="logout.php" class="btn btn-danger">Logout</a>
                 </div>
 
@@ -285,5 +285,7 @@
         <a href="log_history.php">LOG HISTORY</a>
         <a href="users.php">USER INFORMATION</a>
         <a href="directory.php">COMPANY DIRECTORY</a>
+        <a href="calendar1.php">CALENDAR</a>
+        <a href="maintenance.php">MAINTENANCE</a>
     </body>
 </html>

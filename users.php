@@ -63,7 +63,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-1">
             <h2>User Management</h2>
-            <a href="add_user.php" class="btn btn-success btn-sm">
+            <a href="add_user1.php" class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i> Add New Employee
             </a>
         </div>
@@ -121,10 +121,10 @@
                             </span>
                         </td>
                         <td>
-                            <a href="show_user.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
+                            <a href="show_user1.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
                                 <i class="fa fa-eye"></i>
                             </a>
-                            <a href="edit_user1.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
+                            <a href="edit_user2.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
                                 <i class="fa fa-pen"></i>
                             </a>
                             <a href="delete_user.php?id=<?= $row['id'] ?>" 
