@@ -92,14 +92,60 @@
                 </table>
             <?php else: ?>
                 <div class="alert alert-warning">No work details found for this user.</div>
-            <?php endif; ?>
+            <?php endif;?>
         </div>
-        <div class="card-footer text-end">
+
+        <div class="card-footer text-end print-hide">
+            <button onclick="window.print()" class="btn btn-primary me-2">
+             <i class="fa fa-print"></i> Print
+            </button>
             <a href="users.php" class="btn btn-secondary">
                 <i class="fa fa-arrow-left"></i> Back
             </a>
         </div>
     </div>
+
+    <style>
+    @media print {
+        .print-hide, .btn, a, .card-footer {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+            color: black;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        img {
+            max-width: 120px;
+            max-height: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 6px;
+        }
+
+        h3, h5 {
+            color: black !important;
+        }
+    }
+    </style>
+
+    <script>
+    //   window.print(); // Uncomment if you want it to print immediately
+    </script>
 
     <!-- ✅ Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

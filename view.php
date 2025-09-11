@@ -74,10 +74,48 @@
     </head>
     <body class="container mt-4">
 
+    <!-- ✅ NAVIGATION BAR -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+
+                    <!-- Toggle button for mobile -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navbar Links -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Home</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="leave_application.php"><i class="fa fa-file"></i> Application</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="directory.php"><i class="fa fa-building"></i> Directory</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="calendar1.php"><i class="fa fa-calendar"></i> Calendar</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="maintenance.php"><i class="fa fa-cogs"></i> Maintenance</a>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+                </nav>
+
         <!-- WELCOME, DETAILS CODE -->
         <div class="container mt-5">
             <div class="card p-4">
-
                  <!-- Top-right day and date -->
                 <div class="position-absolute top-3 end-0 p-2 text-muted">
                     <h4><?= date('l, F j, Y'); ?></h4>
@@ -284,6 +322,9 @@
         <br>
         <a href="log_history.php">LOG HISTORY</a>
         <a href="users.php">USER INFORMATION</a>
+        <a href="leave_credit.php">LEAVE CREDIT</a>
+        <a href="leave_application.php">LEAVE APPLICATION</a>
+        <a href="approver_maintenance.php">APPROVER MAINTENANCE</a>
         <a href="directory.php">COMPANY DIRECTORY</a>
         <a href="calendar1.php">CALENDAR</a>
         <a href="maintenance.php">MAINTENANCE</a>

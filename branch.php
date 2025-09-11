@@ -28,7 +28,7 @@ if (isset($_POST['delete'])) {
     exit;
 }
 
-$result = $conn->query("SELECT * FROM branches");
+$result = $conn->query("SELECT * FROM branches ORDER BY branch ASC");
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -32,7 +32,7 @@ if (isset($_POST['delete_tax'])) {
 }
 
 // ✅ Fetch Tax List
-$result = $conn->query("SELECT * FROM tax_categories");
+$result = $conn->query("SELECT * FROM tax_categories ORDER BY tax_category ASC");
 
 // ✅ End buffering
 ob_end_flush();

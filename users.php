@@ -1,5 +1,8 @@
 <?php
-    session_start();
+    ob_start();                // ✅ Start output buffering
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     require 'db.php';
 
     // ✅ Only allow superadmin
@@ -32,7 +35,7 @@
     }
 
     // ✅ Count total records
-    $totalResult = $conn->query("SELECT COUNT(*) as cnt FROM users $where");
+    $totalResult = $conn->query("SELECT COUNT(*) as cnt FROM users $where order by name ASC");
     $totalRecords = $totalResult->fetch_assoc()['cnt'] ?? 0;
 
     // ✅ Pagination setup
@@ -44,8 +47,12 @@
     $totalPages = ($perPage > 0) ? ceil($totalRecords / $perPage) : 1;
     $offset = ($page - 1) * $perPage;
 
-    // ✅ Fetch paginated records
-    $sql = "SELECT * FROM users $where LIMIT $offset, $perPage";
+    // // ✅ Fetch paginated records
+    // $sql = "SELECT * FROM users $where LIMIT $offset, $perPage";
+    // $result = $conn->query($sql);
+
+    // ✅ Fetch paginated + sorted records
+    $sql = "SELECT * FROM users $where ORDER BY name ASC LIMIT $offset, $perPage";
     $result = $conn->query($sql);
 ?>
 
@@ -62,8 +69,8 @@
     <body class="container mt-4">
 
         <div class="d-flex justify-content-between align-items-center mb-1">
-            <h2>User Management</h2>
-            <a href="add_user1.php" class="btn btn-success btn-sm">
+            <h5>User Management</h5>
+            <a href="add_user1-Copy.php" class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i> Add New Employee
             </a>
         </div>
@@ -82,7 +89,7 @@
                     </button>
                 </div>
                 <div class="col-md-1">
-                    <a href="users.php" class="btn btn-secondary w-100">
+                    <a href="user_maintenance.php" class="btn btn-secondary w-100">
                         <!-- <i class="fa fa-rotate-left"></i>  -->
                         Reset
                     </a>

@@ -1,5 +1,6 @@
 <?php 
 $activeTab = $_GET['tab'] ?? 'branch'; // default to branch
+$activeTab = $_GET['tab'] ?? 'department';
 $activeTab = $_GET['tab'] ?? 'position';
 $activeTab = $_GET['tab'] ?? 'level';
 $activeTab = $_GET['tab'] ?? 'tax';
@@ -24,6 +25,9 @@ $activeTab = $_GET['tab'] ?? 'Status';
                 <a class="nav-link <?= $activeTab=='branch' ? 'active' : '' ?>" data-bs-toggle="tab" href="#branch">Branch</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link <?= $activeTab=='department' ? 'active' : '' ?>" data-bs-toggle="tab" href="#department">Departments</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?= $activeTab=='position' ? 'active' : '' ?>" data-bs-toggle="tab" href="#position">Position</a>
             </li>
             <li class="nav-item">
@@ -40,6 +44,9 @@ $activeTab = $_GET['tab'] ?? 'Status';
         <div class="tab-content mt-3">
             <div class="tab-pane fade <?= $activeTab=='branch' ? 'show active' : '' ?>" id="branch">
                 <?php include 'branch.php'; ?>
+            </div>
+            <div class="tab-pane fade <?= $activeTab=='department' ? 'show active' : '' ?>" id="department">
+                <?php include 'department.php'; ?>
             </div>
             <div class="tab-pane fade <?= $activeTab=='position' ? 'show active' : '' ?>" id="position">
                 <?php include 'position.php'; ?>

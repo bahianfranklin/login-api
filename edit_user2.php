@@ -195,9 +195,9 @@
                                 <div class="mb-3">
                                     <label class="form-label">Role</label>
                                     <select name="role" class="form-select" required>
-                                        <option <?= $user['role'] === 'superadmin' ? 'selected' : '' ?>>superadmin</option>
-                                        <option <?= $user['role'] === 'admin' ? 'selected' : '' ?>>admin</option>
-                                        <option <?= $user['role'] === 'user' ? 'selected' : '' ?>>user</option>
+                                        <option <?= $user['role'] === 'superadmin' ? 'selected' : '' ?>>Superadmin</option>
+                                        <option <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                        <option <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">

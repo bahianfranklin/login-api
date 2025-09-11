@@ -30,7 +30,7 @@ if (isset($_POST['delete'])) {
 }
 
 // ✅ Fetch all
-$result = $conn->query("SELECT * FROM statuses");
+$result = $conn->query("SELECT * FROM statuses ORDER BY status ASC");
 ?>
 <!DOCTYPE html>
 <html lang="en">

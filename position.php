@@ -30,7 +30,7 @@ if (isset($_POST['delete'])) {
 }
 
 // ✅ Fetch all
-$result = $conn->query("SELECT * FROM positions");
+$result = $conn->query("SELECT * FROM positions ORDER BY position ASC");
 ?>
 <!DOCTYPE html>
 <html lang="en">

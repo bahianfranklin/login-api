@@ -5,20 +5,25 @@
     $errors = [];
     $success = "";
 
-    // ✅ Generate Employee No
-
-    $query = "SELECT MAX(employee_no) AS last_no FROM work_details";
-    $result = $conn->query($query);
-    $row = $result->fetch_assoc();
-
-    if ($row['last_no']) {
-        $lastNum = intval(substr($row['last_no'], 3));
-        $newNum = $lastNum + 1;
-    } else {
-        $newNum = 1;
+    // ✅ Show success message from session
+    if (isset($_SESSION['success'])) {
+        $success = $_SESSION['success'];
+        unset($_SESSION['success']);
     }
 
-    $employee_no = "ABIC-" . str_pad($newNum, 7, "0", STR_PAD_LEFT);
+    // ✅ Re-generate employee number before inserting
+            $query = "SELECT MAX(employee_no) AS last_no FROM work_details";
+            $result = $conn->query($query);
+            $row = $result->fetch_assoc();
+
+            if ($row['last_no']) {
+                $lastNum = intval(substr($row['last_no'], 5)); // NOTE: Changed from 3 to 5 to skip "ABIC-"
+                $newNum = $lastNum + 1;
+            } else {
+                $newNum = 1;
+            }
+
+            $employee_no = "ABIC-" . str_pad($newNum, 7, "0", STR_PAD_LEFT);
 
     // ✅ Handle form submission
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -31,7 +36,7 @@
         $role     = $_POST['role'];
         $status   = $_POST['status'];
         $password = trim($_POST['password']);
-        $profile_pic = "img_temp.png"; // Default profile picture
+        $profile_pic = null;
 
         // ✅ User Info Validation
         if (empty($name))     $errors[] = "Name is required.";
@@ -41,11 +46,10 @@
         if (empty($username)) $errors[] = "Username is required.";
         if (empty($password)) $errors[] = "Password is required.";
 
-        if (!preg_match("/^[0-9+\- ]+$/", $_POST['contact'])) 
+        if (!preg_match("/^[0-9]+$/", $_POST['contact'])) 
             $errors[] = "Contact must be numbers only.";
 
         // ✅ Work Details Validation
-        if (empty($_POST['employee_no']))     $errors[] = "Employee No is required.";
         if (empty($_POST['bank_account_no'])) $errors[] = "Bank Account No is required.";
         if (empty($_POST['sss_no']))          $errors[] = "SSS No is required.";
         if (empty($_POST['philhealth_no']))   $errors[] = "PhilHealth No is required.";
@@ -104,18 +108,19 @@
             }
         }
 
-        // $profile_pic = "img_temp.png";
-        // if (!empty($_FILES['profile_pic']['name'])) {
-        //     $fileName = time() . "_" . basename($_FILES["profile_pic"]["name"]);
-        //     $targetFilePath = $targetDir . $fileName;
+        $profile_pic = "img_temp.png";
+        if (!empty($_FILES['profile_pic']['name'])) {
+            $fileName = time() . "_" . basename($_FILES["profile_pic"]["name"]);
+            $targetFilePath = $targetDir . $fileName;
 
-        //     if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $targetFilePath)) {
-        //         $profile_pic = $fileName;
-        //     }
-        // }
+            if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $targetFilePath)) {
+                $profile_pic = $fileName;
+            }
+        }
 
         // ✅ If no errors, insert into database
         if (empty($errors)) {
+
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
             $stmt = $conn->prepare("INSERT INTO users (name, address, contact, birthday, email, username, role, status, password, profile_pic) 
@@ -140,7 +145,10 @@
                 $_POST['tax_category'], $_POST['status_desc'], $_POST['leave_rule'], $user_id);
 
             if ($stmt2->execute()) {
-                $success = "User and Work Details added successfully!";
+                //$success = "User and Work Details added successfully!";
+                $_SESSION['success'] = "User and Work Details added successfully!";
+                header("Location: add_user1-Copy.php");
+                exit();
             } else {
                 $errors[] = "Failed to insert work details: " . $stmt2->error;
             }
@@ -158,9 +166,9 @@
     $Departments = $conn->query("SELECT id, department FROM departments ORDER BY department ASC");
     $Positions = $conn->query("SELECT id, position FROM positions ORDER BY position ASC");
     $Levels = $conn->query("SELECT id, level FROM levels ORDER BY level ASC");
-    $Taxs = $conn->query("SELECT id, tax FROM tax_categories ORDER BY tax ASC");
+    $Taxs = $conn->query("SELECT id, tax_category FROM tax_categories ORDER BY tax_category ASC");
     $Statuses = $conn->query("SELECT id, status FROM statuses ORDER BY status ASC");
-    
+
 ?>
 
 <!DOCTYPE html>
@@ -277,7 +285,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Employee No *</label>
-                        <input type="text" name="employee_no" value="<?php echo $employee_no; ?>" readonly>
+                        <input type="text" value="<?php echo $employee_no; ?>" readonly class="form-control">
                     </div>
 
                     <div class="mb-3">
@@ -317,7 +325,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Branch *</label>
-                        <select name="branch" class="form-select" required>
+                         <select name="branch" class="form-select" required>
                             <option value="">-- Select Branch --</option>
                             <?php while ($row = $branches->fetch_assoc()): ?>
                                 <option value="<?= $row['branch'] ?>"><?= htmlspecialchars($row['branch']) ?></option>
@@ -360,7 +368,7 @@
                         <select name="tax_category" class="form-select" required>
                             <option value="">-- Select Tax Category --</option>
                             <?php while ($row = $Taxs->fetch_assoc()): ?>
-                                <option value="<?= $row['tax'] ?>"><?= htmlspecialchars($row['tax']) ?></option>
+                                <option value="<?= $row['tax_category'] ?>"><?= htmlspecialchars($row['tax_category']) ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
@@ -396,6 +404,18 @@
             const output = document.getElementById('preview');
             output.src = URL.createObjectURL(event.target.files[0]);
         }
+
+        <script>
+        setTimeout(function() {
+            const msg = document.getElementById('successMsg');
+            if (msg) {
+                msg.style.transition = "opacity 0.5s ease";
+                msg.style.opacity = 0;
+                setTimeout(() => msg.style.display = 'none', 500); // wait for fade out
+            }
+        }, 5000);
+        </script>
+
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>  
