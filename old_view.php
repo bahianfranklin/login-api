@@ -1,0 +1,438 @@
+<!-- ✅ Get data in Database -->
+<?php
+    session_start();
+    require 'db.php';
+
+    // 🚫 Prevent cached pages
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    if (!isset($_SESSION['user'])) {
+        header("Location: login.php");
+        exit();
+    }
+
+    $user = $_SESSION['user'];
+
+    // ✅ Assume logged-in user
+    $user_id = $_SESSION['user_id'] ?? 1; // change if needed
+
+    // ✅ Get Leave Balance
+    $leave_sql = "SELECT mandatory, vacation_leave, sick_leave FROM leave_credits WHERE user_id = ?";
+    $stmt = $conn->prepare($leave_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $leave = $stmt->get_result()->fetch_assoc();
+
+    // ✅ Get Events
+    $today = date("Y-m-d");
+
+    // Birthdays today
+    $bday_sql = "SELECT name, birthday FROM users WHERE DATE_FORMAT(birthday, '%m-%d') = DATE_FORMAT(?, '%m-%d')";
+    $stmt = $conn->prepare($bday_sql);
+    $stmt->bind_param("s", $today);
+    $stmt->execute();
+    $birthdays = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // Holidays (today + upcoming 7 days)
+    $holiday_sql = "SELECT * FROM holidays WHERE date >= ? ORDER BY date ASC LIMIT 5";
+    $stmt = $conn->prepare($holiday_sql);
+    $stmt->bind_param("s", $today);
+    $stmt->execute();
+    $holidays = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // ✅ Get Work Schedule
+    $sched_sql = "SELECT * FROM employee_schedules WHERE user_id = ?";
+    $stmt = $conn->prepare($sched_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $schedule = $stmt->get_result()->fetch_assoc();
+
+    // ✅ Get Last Payroll Period
+    $period_sql = "SELECT * FROM payroll_periods ORDER BY end_date DESC LIMIT 1";
+    $period = $conn->query($period_sql)->fetch_assoc();
+
+?>
+
+<!-- ?php
+    require 'config.php';
+
+    // ✅ Get search keyword
+    $search = $_GET['search'] ?? '';
+
+    // ✅ Get per-page limit from dropdown (default 5)
+    $perPage = $_GET['limit'] ?? 5;
+
+    // ✅ Current page
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
+    // ✅ Fetch all records from API
+    $url = $baseUrl . "?action=view";
+    $result = requestData($url);
+    $result = preg_replace('/^[^\{]+/', '', $result);
+    $result = preg_replace('/[^\}]+$/', '', $result);
+    $dataArray = json_decode($result, true);
+
+    $records = $dataArray['data'] ?? [];
+
+    // ✅ Filter if search entered
+    if (!empty($search)) {
+        $records = array_filter($records, function($row) use ($search) {
+            return stripos($row['fullname'], $search) !== false ||
+                stripos($row['address'], $search) !== false ||
+                stripos($row['contact_no'], $search) !== false;
+        });
+    }
+
+    // ✅ Pagination setup
+    $totalRecords = count($records);
+
+    if ($perPage === "all") {
+        // Show ALL records
+        $currentRecords = $records;
+        $totalPages = 1;
+        $page = 1;
+        $offset = 0;
+    } else {
+        $perPage = intval($perPage);
+        $totalPages = ceil($totalRecords / $perPage);
+        $offset = ($page - 1) * $perPage;
+        $currentRecords = array_slice($records, $offset, $perPage);
+    }
+?> -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+        <title>Welcome | Dashboard</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    </head>
+    <body class="container mt-4">
+
+    <!-- ✅ NAVIGATION BAR -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+
+                    <!-- Toggle button for mobile -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navbar Links -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="leave_application.php"><i class="fa fa-file"></i> Application</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="directory.php"><i class="fa fa-building"></i> Directory</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="contact_details.php"><i class="fas fa-address-book"></i> Contact Details</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="calendar1.php"><i class="fa fa-calendar"></i> Calendar</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="maintenance.php"><i class="fa fa-cogs"></i> Maintenance</a>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+                </nav>
+
+        <!-- WELCOME, DETAILS CODE -->
+        <div class="container mt-5">
+            <div class="card p-4">
+                 <!-- Top-right day and date -->
+                <div class="position-absolute top-3 end-0 p-2 text-muted">
+                    <h4><?= date('l, F j, Y'); ?></h4>
+                </div>
+
+                <!-- Always visible -->
+                <h2 class="mb-3">
+                    Welcome, <?= htmlspecialchars($user['name']); ?> 👋
+                    <!-- Toggle button -->
+                    <button class="btn btn-sm btn-outline-primary ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#userDetails" aria-expanded="false" aria-controls="userDetails">
+                        ▼
+                    </button>
+                </h2>
+
+                <!-- Hidden details (dropdown) -->
+                <div class="collapse mt-3" id="userDetails">
+
+                   <!-- Profile Picture -->
+                    <?php 
+                        $profilePath = "uploads/" . $user['profile_pic']; 
+                        if (!empty($user['profile_pic']) && file_exists($profilePath)): ?>
+                            <div class="mb-3 text-center">
+                                <img src="<?= $profilePath ?>?t=<?= time(); ?>" 
+                                    alt="Profile Picture" 
+                                    class="img-thumbnail rounded-circle" 
+                                    style="width:150px; height:150px; object-fit:cover;">
+                            </div>
+                        <?php else: ?>
+                            <div class="mb-3 text-center">
+                                <img src="uploads/default.png" 
+                                    class="rounded-circle border border-2" 
+                                    style="width:120px; height:120px; object-fit:cover;">
+                            </div>
+                        <?php endif; 
+                    ?>
+
+                    <p><strong>Address:</strong> <?= htmlspecialchars($user['address']); ?></p>
+                    <p><strong>Contact:</strong> <?= htmlspecialchars($user['contact']); ?></p>
+                    <p><strong>Birthday:</strong> 
+                        <?= !empty($user['birthday']) ? date("F d, Y", strtotime($user['birthday'])) : "—"; ?>
+                    </p>
+                    <p><strong>Email:</strong> <?= htmlspecialchars($user['email']); ?></p>
+                    <p><strong>Username:</strong> <?= htmlspecialchars($user['username']); ?></p>
+                    <p><strong>Role:</strong> <?= htmlspecialchars($user['role']); ?></p>
+                    <p><strong>Status:</strong> <?= htmlspecialchars($user['status']); ?></p>
+
+                    <a href="edit_user-profile.php?id=<?= $user['id']; ?>" class="btn btn-primary">Edit</a>
+                    <a href="logout.php" class="btn btn-danger">Logout</a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Bootstrap JS (needed for collapse to work) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+        <br>
+        <br>
+        <br>
+
+        <div class="container">
+            <h3 class="mb-4">Employee Dashboard</h3>
+
+            <!-- Leave Balance -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">Leave Balance</div>
+                <div class="card-body">
+                    <p><b>Mandatory Leave:</b> <?= $leave['mandatory'] ?? 0 ?></p>
+                    <p><b>Vacation Leave:</b> <?= $leave['vacation_leave'] ?? 0 ?></p>
+                    <p><b>Sick Leave:</b> <?= $leave['sick_leave'] ?? 0 ?></p>
+                </div>
+            </div>
+
+            <!-- Events -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">Events</div>
+                <div class="card-body">
+                    <h6>🎂 Birthdays Today</h6>
+                    <?php if ($birthdays) { foreach ($birthdays as $b) { ?>
+                        <p><?= $b['name'] ?> (<?= date("M d", strtotime($b['birthday'])) ?>)</p>
+                    <?php }} else { echo "<p>No birthdays today</p>"; } ?>
+
+                    <h6 class="mt-3">📅 Upcoming Holidays</h6>
+                    <?php if ($holidays) { foreach ($holidays as $h) { ?>
+                        <p><b><?= $h['title'] ?></b> - <?= date("M d, Y", strtotime($h['date'])) ?></p>
+                    <?php }} else { echo "<p>No upcoming holidays</p>"; } ?>
+                </div>
+            </div>
+
+            <!-- Work Schedule -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning">Work Schedule</div>
+                <div class="card-body">
+                    <?php if ($schedule) { ?>
+                        <table class="table table-bordered">
+                            <tr><th>Monday</th><td><?= $schedule['monday'] ?></td></tr>
+                            <tr><th>Tuesday</th><td><?= $schedule['tuesday'] ?></td></tr>
+                            <tr><th>Wednesday</th><td><?= $schedule['wednesday'] ?></td></tr>
+                            <tr><th>Thursday</th><td><?= $schedule['thursday'] ?></td></tr>
+                            <tr><th>Friday</th><td><?= $schedule['friday'] ?></td></tr>
+                            <tr><th>Saturday</th><td><?= $schedule['saturday'] ?></td></tr>
+                            <tr><th>Sunday</th><td><?= $schedule['sunday'] ?></td></tr>
+                        </table>
+                    <?php } else { echo "<p>No schedule set</p>"; } ?>
+                </div>
+            </div>
+
+            <!-- Payroll Period -->
+            <div class="card mb-3">
+                <div class="card-header bg-info">Current Payroll Period</div>
+                <div class="card-body">
+                    <?php if ($period) { ?>
+                        <p><b>Period Code:</b> <?= $period['period_code'] ?></p>
+                        <p><b>Start:</b> <?= $period['start_date'] ?> | <b>End:</b> <?= $period['end_date'] ?></p>
+                        <p><b>Cutoff:</b> <?= $period['cutoff'] ?></p>
+                        <!-- <p><b>Status:</b> <?= $period['status'] ?></p> -->
+                    <?php } else { echo "<p>No payroll period found</p>"; } ?>
+                </div>
+            </div>
+        </div>
+
+       <!-- <div class="d-flex justify-content-between align-items-center mb-3"> 
+            <h3 class="m-0">Contacts Details</h3>
+
+            // Add button aligned RIGHT
+            <a href="add.php" class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i> Add New Employee
+            </a>
+        </div>-->
+
+        <!-- Search Form
+        <form method="get" class="mb-3 d-flex">
+            <input type="text" name="search" class="form-control me-2" 
+                placeholder="Search by name, address and contact..."
+                value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="view.php" class="btn btn-secondary ms-2">Reset</a>
+        </form>
+
+        <?php if (isset($dataArray['data']) && is_array($dataArray['data'])): ?>
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Contact No</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody> -->
+                    <!-- <?php foreach ($currentRecords as $i => $row): ?> -->
+                    <tr>
+                    <td><?= $offset + $i + 1 ?></td> <!-- Execute Tables numbering per pages (ex.1-19) -->
+                    <td><?= htmlspecialchars($row['fullname']) ?></td>
+                    <td><?= htmlspecialchars($row['address']) ?></td>
+                    <td><?= htmlspecialchars($row['contact_no']) ?></td>
+                    <td>
+                        <!-- View button -->
+                        <a href="show.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">
+                        <i class="fa fa-eye"></i>
+                        </a>
+                        <!-- Edit button -->
+                        <a href="update.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
+                        <i class="fa fa-pen"></i>
+                        </a>
+
+                        <!-- Delete button 
+                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Delete this contact?');">
+                        <i class="fa fa-trash"></i>
+                        </a>-->
+
+                         <!-- Delete Button with details in popup -->
+                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
+                        onclick="return confirm('Delete this contact?\n\nName: <?= addslashes($row['fullname']) ?>\nAddress: <?= addslashes($row['address']) ?>\nContact No: <?= addslashes($row['contact_no']) ?>');">
+                        <i class="fa fa-trash"></i>
+                        </a>
+                        
+                    </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <!-- <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap"> 
+                    <!-- ✅ Pagination controls
+                    <nav>
+                        <ul class="pagination">
+                            <?php if ($page > 1): ?>
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                    href="?page=<?= $page-1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
+                                    Previous
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                                    <a class="page-link" 
+                                    href="?page=<?= $i ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
+                                    <?= $i ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <?php if ($page < $totalPages): ?>
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                    href="?page=<?= $page+1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
+                                    Next
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </nav> -->
+
+                    <!-- ✅ Page Dropdown Pagination -
+                    <form method="get" class="d-inline">
+                        <input type="hidden" name="limit" value="<?= $perPage ?>">
+                        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+                        <label for="pageSelect">Page</label>
+                        <select name="page" id="pageSelect" onchange="this.form.submit()">
+                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                <option value="<?= $i ?>" <?= ($i == $page) ? 'selected' : '' ?>>
+                                    Page <?= $i ?> of <?= $totalPages ?>
+                                </option>
+                            <?php endfor; ?>
+                        </select>
+                    </form>->
+
+                    <!-- ✅ Dropdown entries (10, 25, 50, 100, or all) 
+                    <form method="get" action="view.php" style="margin-bottom:10px;">
+                        <input type="hidden" name="page" value="<?= $page ?>">
+                        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+                        <label>Show 
+                            <select name="limit" onchange="this.form.submit()">
+                                <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
+                                <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
+                                <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
+                                <option value="50" <?= ($perPage == 50) ? 'selected' : '' ?>>50</option>
+                                <option value="100" <?= ($perPage == 100) ? 'selected' : '' ?>>100</option>
+                                <option value="all" <?= ($perPage === 'all') ? 'selected' : '' ?>>Show All</option>
+                            </select>
+                            entries
+                        </label>
+                    </form>-->
+
+                    <!-- ✅ Export file to CSV, Excel & PDF 
+                    <form method="get" action="export.php" class="d-inline">
+                        <input type="hidden" name="search" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                        <label>Export:
+                            <select name="type" onchange="this.form.submit()" class="form-select d-inline w-auto">
+                            <option value="">-- Select --</option>
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                            </select>
+                        </label>
+                    </form>
+
+                    <?php else: ?>
+                        <p>No records found.</p>
+                    <?php endif; ?>
+        </div>-->
+
+        <br>
+        <!-- <a href="log_history.php">LOG HISTORY</a>
+        <a href="users.php">USER INFORMATION</a>
+        <a href="leave_credit.php">LEAVE CREDIT</a>
+        <a href="leave_application.php">LEAVE APPLICATION</a>
+        <a href="approver_maintenance.php">APPROVER MAINTENANCE</a>
+        <a href="directory.php">COMPANY DIRECTORY</a>
+        <a href="calendar1.php">CALENDAR</a>
+        <a href="maintenance.php">MAINTENANCE</a> -->
+    </body>
+</html>

@@ -44,35 +44,39 @@
     }
 
     // ✅ Handle Update
-    if (isset($_POST['update'])) {
-        $id = $_POST['user_id'];
-        $mandatory = $_POST['mandatory'];
-        $vacation = $_POST['vacation_leave'];
-        $sick = $_POST['sick_leave'];
+    if (isset($_POST['update'])) { // Only run when Save Changes is clicked
+        $id = (int)$_POST['user_id'];
+        $mandatory = (int)$_POST['mandatory'];
+        $vacation = (int)$_POST['vacation_leave'];
+        $sick = (int)$_POST['sick_leave'];
 
-        // Check if row exists
-        $check = $conn->prepare("SELECT id FROM leave_credits WHERE user_id=?");
-        $check->bind_param("i", $id);
-        $check->execute();
-        $check->store_result();
+        // Check if record exists
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM leave_credits WHERE user_id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
 
-        if ($check->num_rows > 0) {
-            // ✅ Update existing row
+        if ($count > 0) {
             $stmt = $conn->prepare("UPDATE leave_credits 
-                                    SET mandatory=?, vacation_leave=?, sick_leave=? 
+                                    SET mandatory=?, vacation_leave=?, sick_leave=?
                                     WHERE user_id=?");
             $stmt->bind_param("iiii", $mandatory, $vacation, $sick, $id);
-            $stmt->execute();
         } else {
-            // ✅ Insert if not exists
-            $stmt = $conn->prepare("INSERT INTO leave_credits 
-                                    (user_id, mandatory, vacation_leave, sick_leave) 
+            $stmt = $conn->prepare("INSERT INTO leave_credits (user_id, mandatory, vacation_leave, sick_leave) 
                                     VALUES (?, ?, ?, ?)");
             $stmt->bind_param("iiii", $id, $mandatory, $vacation, $sick);
-            $stmt->execute();
         }
-            header("Location: user_maintenance.php");
-            exit;
+
+        if (!$stmt->execute()) {
+            die("Database error: " . $stmt->error);
+        }
+        $stmt->close();
+
+        // Redirect to refresh page (prevents duplicate form submission)
+        header("Location: user_maintenance.php?tab=leave_credit");
+        exit;
     }
 
     // ✅ Handle Delete
@@ -83,7 +87,7 @@
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
-        header("Location: leave_credit.php");
+        header("Location: user_maintenance.php?tab=leave_credit");
         exit;
 
     }
@@ -172,7 +176,7 @@
         <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-            <form method="post">
+            <form method="post" action="leave_credit.php">
                 <div class="modal-header">
                 <h5 class="modal-title"><i class="fa fa-edit"></i> Edit Leave Credits</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -210,7 +214,7 @@
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-            <form method="post">
+            <form method="post" action="leave_credit.php">
                 <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title"><i class="fa fa-trash"></i> Confirm Delete</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

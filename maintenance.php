@@ -39,6 +39,9 @@ $activeTab = $_GET['tab'] ?? 'Status';
             <li class="nav-item">
                 <a class="nav-link <?= $activeTab=='status' ? 'active' : '' ?>" data-bs-toggle="tab" href="#status">Status</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?= $activeTab=='payroll' ? 'active' : '' ?>" data-bs-toggle="tab" href="#payroll">Payroll Period</a>
+            </li>
         </ul>
 
         <div class="tab-content mt-3">
@@ -59,6 +62,9 @@ $activeTab = $_GET['tab'] ?? 'Status';
             </div>
             <div class="tab-pane fade <?= $activeTab=='status' ? 'show active' : '' ?>" id="status">
                 <?php include 'status.php'; ?>
+            </div>
+            <div class="tab-pane fade <?= $activeTab=='payroll' ? 'show active' : '' ?>" id="payroll">
+                <?php include 'payroll_periods.php'; ?>
             </div>
         </div>
 

@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['user_id'])) {
         $stmt->close();
     }
 
-    header("Location: schedules.php");
+    header("Location: user_maintenance.php?tab=schedules");
     exit;
 }
 
@@ -57,7 +57,7 @@ if (isset($_GET['delete_id']) && !empty($_GET['delete_id'])) {
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->close();
-    header("Location: schedules.php");
+    header("Location: user_maintenance.php?tab=schedules");
     exit;
 }
 
@@ -153,7 +153,7 @@ if (!$schedules) {
                         <td><?= $counts['work_from_home'] ?></td>
                         <td><?= $counts['rest_day'] ?></td>
                         <td>
-                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['user_id'] ?>">Edit</button>
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#schedule_editModal<?= $row['user_id'] ?>">Edit</button>
                             <?php if($row['schedule_id']): ?>
                                 <a href="schedules.php?delete_id=<?= $row['schedule_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this schedule?')">Delete</a>
                             <?php endif; ?>
@@ -161,7 +161,7 @@ if (!$schedules) {
                     </tr>
 
                     <!-- Edit Modal -->
-                    <div class="modal fade" id="editModal<?= $row['user_id'] ?>" tabindex="-1">
+                    <div class="modal fade" id="schedule_editModal<?= $row['user_id'] ?>" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <form method="POST" action="schedules.php">
@@ -338,7 +338,7 @@ if (!$schedules) {
                     </tr>
 
                     <!-- Edit Modal -->
-                    <div class="modal fade" id="editModal<?= $row['user_id'] ?>" tabindex="-1">
+                    <div class="modal fade" id="schedule_editModal<?= $row['user_id'] ?>" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <form method="POST" action="schedules.php">

@@ -333,16 +333,13 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success">Add</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>   
                 </div>
                 </div>
-            </form>        
+            </form>          
         </div>
     </div>
 
-    <a href="view.php" class="btn btn-primary mt-3">BACK</a>
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
@@ -358,6 +355,6 @@
         }
     });
     </script>
-
+    <a href="view.php" class="btn btn-primary mt-3">BACK</a> 
     </body>
 </html>

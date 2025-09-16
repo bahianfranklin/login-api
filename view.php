@@ -1,6 +1,6 @@
-<!-- ✅ Get data in Database -->
 <?php
     session_start();
+    require 'db.php';
 
     // 🚫 Prevent cached pages
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -14,60 +14,26 @@
     }
 
     $user = $_SESSION['user'];
-?>
 
-<?php
-    require 'config.php';
+    // ✅ Assume logged-in user
+    $user_id = $_SESSION['user_id'] ?? 1; // change if needed
 
-    // ✅ Get search keyword
-    $search = $_GET['search'] ?? '';
+    // ✅ Get Leave Balance
+    $leave_sql = "SELECT mandatory, vacation_leave, sick_leave FROM leave_credits WHERE user_id = ?";
+    $stmt = $conn->prepare($leave_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $leave = $stmt->get_result()->fetch_assoc();
 
-    // ✅ Get per-page limit from dropdown (default 5)
-    $perPage = $_GET['limit'] ?? 5;
-
-    // ✅ Current page
-    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-
-    // ✅ Fetch all records from API
-    $url = $baseUrl . "?action=view";
-    $result = requestData($url);
-    $result = preg_replace('/^[^\{]+/', '', $result);
-    $result = preg_replace('/[^\}]+$/', '', $result);
-    $dataArray = json_decode($result, true);
-
-    $records = $dataArray['data'] ?? [];
-
-    // ✅ Filter if search entered
-    if (!empty($search)) {
-        $records = array_filter($records, function($row) use ($search) {
-            return stripos($row['fullname'], $search) !== false ||
-                stripos($row['address'], $search) !== false ||
-                stripos($row['contact_no'], $search) !== false;
-        });
-    }
-
-    // ✅ Pagination setup
-    $totalRecords = count($records);
-
-    if ($perPage === "all") {
-        // Show ALL records
-        $currentRecords = $records;
-        $totalPages = 1;
-        $page = 1;
-        $offset = 0;
-    } else {
-        $perPage = intval($perPage);
-        $totalPages = ceil($totalRecords / $perPage);
-        $offset = ($page - 1) * $perPage;
-        $currentRecords = array_slice($records, $offset, $perPage);
-    }
+    // ✅ Get Events
+    $today = date("Y-m-d");
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
     <meta charset="UTF-8">
-        <title>Welcome | Contacts Details</title>
+        <title>Welcome | Dashboard</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -88,7 +54,7 @@
                     <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
-                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Home</a>
+                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Dashboard</a>
                         </li>
                         <li class="nav-item">
                         <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
@@ -97,10 +63,16 @@
                         <a class="nav-link" href="leave_application.php"><i class="fa fa-file"></i> Application</a>
                         </li>
                         <li class="nav-item">
+                        <a class="nav-link" href="pending_leaves.php"><i class="fa fa-circle-check"></i> For Approving</a>
+                        </li>
+                        <li class="nav-item">
                         <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
                         </li>
                         <li class="nav-item">
                         <a class="nav-link" href="directory.php"><i class="fa fa-building"></i> Directory</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="contact_details.php"><i class="fas fa-address-book"></i> Contact Details</a>
                         </li>
                         <li class="nav-item">
                         <a class="nav-link" href="calendar1.php"><i class="fa fa-calendar"></i> Calendar</a>
@@ -175,158 +147,114 @@
         <br>
         <br>
         <br>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="m-0">Contacts Details</h3>
 
-            <!-- Add button aligned RIGHT -->
-            <a href="add.php" class="btn btn-success btn-sm">
-                <i class="fa fa-plus"></i> Add New Employee
-            </a>
+        <div class="container">
+            <h3 class="mb-4">Employee Dashboard</h3>
+
+            <!-- Leave Balance -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">Leave Balance</div>
+                    <div class="card-body">
+                        <div id="leaveBalance">
+                            Loading leave balance...
+                        </div>
+                    </div>
+            </div>
+
+            <!-- Events -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">Events</div>
+                    <div class="card-body">
+                        <div id="eventSection">
+                            Loading events...
+                        </div>
+                    </div>
+            </div>
+            
+            <!-- Work Schedule -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning">Work Schedule</div>
+                    <div id="scheduleSection">
+                        Loading schedule...
+                    </div>
+            </div>
+
+            <!-- Payroll Period -->
+            <div class="card mb-3">
+                <div class="card-header bg-info">Current Payroll Period</div>
+                    <div class="card-body">
+                        <div id="payrollSection">
+                            Loading payroll...
+                        </div>
+                    </div>
+            </div>
         </div>
 
-        <!-- Search Form -->
-        <form method="get" class="mb-3 d-flex">
-            <input type="text" name="search" class="form-control me-2" 
-                placeholder="Search by name, address and contact..."
-                value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a href="view.php" class="btn btn-secondary ms-2">Reset</a>
-        </form>
+    <script>
+    function fetchDashboard() {
+        fetch("dashboard_data.php")
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("leaveBalance").innerHTML = "<p>Error: " + data.error + "</p>";
+                    return;
+                }
 
-        <?php if (isset($dataArray['data']) && is_array($dataArray['data'])): ?>
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Address</th>
-                    <th>Contact No</th>
-                    <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($currentRecords as $i => $row): ?>
-                    <tr>
-                    <td><?= $offset + $i + 1 ?></td> <!-- Execute Tables numbering per pages (ex.1-19) -->
-                    <td><?= htmlspecialchars($row['fullname']) ?></td>
-                    <td><?= htmlspecialchars($row['address']) ?></td>
-                    <td><?= htmlspecialchars($row['contact_no']) ?></td>
-                    <td>
-                        <!-- View button -->
-                        <a href="show.php?id=<?= $row['id'] ?>" class="btn btn-info btn-sm">
-                        <i class="fa fa-eye"></i>
-                        </a>
-                        <!-- Edit button -->
-                        <a href="update.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">
-                        <i class="fa fa-pen"></i>
-                        </a>
+                // ✅ Update Leave Balance
+                document.getElementById("leaveBalance").innerHTML = `
+                    <p><b>Mandatory Leave:</b> ${data.leave?.mandatory ?? 0}</p>
+                    <p><b>Vacation Leave:</b> ${data.leave?.vacation_leave ?? 0}</p>
+                    <p><b>Sick Leave:</b> ${data.leave?.sick_leave ?? 0}</p>
+                `;
 
-                        <!-- Delete button 
-                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Delete this contact?');">
-                        <i class="fa fa-trash"></i>
-                        </a>-->
+                // ✅ Update Events
+                let bdays = data.birthdays.length 
+                    ? data.birthdays.map(b => `<p>${b.name} (${new Date(b.birthday).toLocaleDateString('en-US',{month:'short',day:'numeric'})})</p>`).join("")
+                    : "<p>No birthdays today</p>";
 
-                         <!-- Delete Button with details in popup -->
-                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Delete this contact?\n\nName: <?= addslashes($row['fullname']) ?>\nAddress: <?= addslashes($row['address']) ?>\nContact No: <?= addslashes($row['contact_no']) ?>');">
-                        <i class="fa fa-trash"></i>
-                        </a>
-                        
-                    </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
-                    <!-- ✅ Pagination controls -->
-                    <nav>
-                        <ul class="pagination">
-                            <?php if ($page > 1): ?>
-                                <li class="page-item">
-                                    <a class="page-link" 
-                                    href="?page=<?= $page-1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
-                                    Previous
-                                    </a>
-                                </li>
-                            <?php endif; ?>
+                let holidays = data.holidays.length
+                    ? data.holidays.map(h => `<p><b>${h.title}</b> - ${new Date(h.date).toLocaleDateString()}</p>`).join("")
+                    : "<p>No upcoming holidays</p>";
 
-                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                                    <a class="page-link" 
-                                    href="?page=<?= $i ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
-                                    <?= $i ?>
-                                    </a>
-                                </li>
-                            <?php endfor; ?>
+                document.getElementById("eventSection").innerHTML = `
+                    <h6>🎂 Birthdays Today</h6>${bdays}
+                    <h6 class="mt-3">📅 Upcoming Holidays</h6>${holidays}
+                `;
 
-                            <?php if ($page < $totalPages): ?>
-                                <li class="page-item">
-                                    <a class="page-link" 
-                                    href="?page=<?= $page+1 ?>&limit=<?= $perPage ?>&search=<?= urlencode($search) ?>">
-                                    Next
-                                    </a>
-                                </li>
-                            <?php endif; ?>
-                        </ul>
-                    </nav>
+                // ✅ Update Work Schedule
+                if (data.schedule) {
+                    document.getElementById("scheduleSection").innerHTML = `
+                        <table class="table table-bordered">
+                            <tr><th>Monday</th><td>${data.schedule.monday}</td></tr>
+                            <tr><th>Tuesday</th><td>${data.schedule.tuesday}</td></tr>
+                            <tr><th>Wednesday</th><td>${data.schedule.wednesday}</td></tr>
+                            <tr><th>Thursday</th><td>${data.schedule.thursday}</td></tr>
+                            <tr><th>Friday</th><td>${data.schedule.friday}</td></tr>
+                            <tr><th>Saturday</th><td>${data.schedule.saturday}</td></tr>
+                            <tr><th>Sunday</th><td>${data.schedule.sunday}</td></tr>
+                        </table>
+                    `;
+                } else {
+                    document.getElementById("scheduleSection").innerHTML = "<p>No schedule set</p>";
+                }
 
-                    <!-- ✅ Page Dropdown Pagination -->
-                    <form method="get" class="d-inline">
-                        <input type="hidden" name="limit" value="<?= $perPage ?>">
-                        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
-                        <label for="pageSelect">Page</label>
-                        <select name="page" id="pageSelect" onchange="this.form.submit()">
-                            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                <option value="<?= $i ?>" <?= ($i == $page) ? 'selected' : '' ?>>
-                                    Page <?= $i ?> of <?= $totalPages ?>
-                                </option>
-                            <?php endfor; ?>
-                        </select>
-                    </form>
+                // ✅ Update Payroll
+                if (data.period) {
+                    document.getElementById("payrollSection").innerHTML = `
+                        <p><b>Period Code:</b> ${data.period.period_code}</p>
+                        <p><b>Start:</b> ${data.period.start_date} | <b>End:</b> ${data.period.end_date}</p>
+                        <p><b>Cutoff:</b> ${data.period.cutoff}</p>
+                    `;
+                } else {
+                    document.getElementById("payrollSection").innerHTML = "<p>No payroll period found</p>";
+                }
+            });
+    }
 
-                    <!-- ✅ Dropdown entries (10, 25, 50, 100, or all) -->
-                    <form method="get" action="view.php" style="margin-bottom:10px;">
-                        <input type="hidden" name="page" value="<?= $page ?>">
-                        <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
-                        <label>Show 
-                            <select name="limit" onchange="this.form.submit()">
-                                <option value="5" <?= ($perPage == 5) ? 'selected' : '' ?>>5</option>
-                                <option value="10" <?= ($perPage == 10) ? 'selected' : '' ?>>10</option>
-                                <option value="25" <?= ($perPage == 25) ? 'selected' : '' ?>>25</option>
-                                <option value="50" <?= ($perPage == 50) ? 'selected' : '' ?>>50</option>
-                                <option value="100" <?= ($perPage == 100) ? 'selected' : '' ?>>100</option>
-                                <option value="all" <?= ($perPage === 'all') ? 'selected' : '' ?>>Show All</option>
-                            </select>
-                            entries
-                        </label>
-                    </form>
-
-                    <!-- ✅ Export file to CSV, Excel & PDF -->
-                    <form method="get" action="export.php" class="d-inline">
-                        <input type="hidden" name="search" value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-                        <label>Export:
-                            <select name="type" onchange="this.form.submit()" class="form-select d-inline w-auto">
-                            <option value="">-- Select --</option>
-                            <option value="csv">CSV</option>
-                            <option value="excel">Excel</option>
-                            <option value="pdf">PDF</option>
-                            </select>
-                        </label>
-                    </form>
-
-                    <?php else: ?>
-                        <p>No records found.</p>
-                    <?php endif; ?>
-        </div>
-        <br>
-        <a href="log_history.php">LOG HISTORY</a>
-        <a href="users.php">USER INFORMATION</a>
-        <a href="leave_credit.php">LEAVE CREDIT</a>
-        <a href="leave_application.php">LEAVE APPLICATION</a>
-        <a href="approver_maintenance.php">APPROVER MAINTENANCE</a>
-        <a href="directory.php">COMPANY DIRECTORY</a>
-        <a href="calendar1.php">CALENDAR</a>
-        <a href="maintenance.php">MAINTENANCE</a>
+    // Run immediately and auto-refresh every 5s
+    fetchDashboard();
+    setInterval(fetchDashboard, 5000);
+    </script>
+    
     </body>
 </html>

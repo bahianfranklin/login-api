@@ -7,7 +7,7 @@
         $data = ["record_id" => $id];
         requestData($url, $data);
     }
-    header("Location: view.php");
+    header("Location: contact_detials.php");
     exit;
 ?>
 
