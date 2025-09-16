@@ -356,5 +356,11 @@
     });
     </script>
     <a href="view.php" class="btn btn-primary mt-3">BACK</a> 
+    <a href="official_business.php" class="btn btn-danger mt-3">OFFICAL BUSINESS</a>
+    <a href="change_schedule.php" class="btn btn-danger mt-3">CHANGE SCHEDULE</a>
+    <a href="failure_clock.php" class="btn btn-danger mt-3">FAILURE CLOCK</a>
+    <a href="clock_alteration.php" class="btn btn-danger mt-3">CLOCK ALTERATION</a>
+    <a href="work_restday.php" class="btn btn-danger mt-3">WORK RESTDAY</a>
+    <a href="overtime.php" class="btn btn-danger mt-3">OVERTIME</a>
     </body>
 </html>

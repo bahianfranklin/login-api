@@ -8,25 +8,27 @@
     }
 
     // 🔹 Pending requests
+    // Improved: Readable SQL, consistent aliases, and comments
     $sqlPending = "
         SELECT 
-        lr.application_no,
-        u.name AS employee,
-        d.department,
-        lr.leave_type,
-        lr.date_from,
-        lr.date_to,
-        lr.status,
-        lr.remarks,
-        lr.date_applied
-    FROM leave_requests lr
-    JOIN users u ON lr.user_id = u.id
-    JOIN work_details wd ON u.id = wd.user_id
-    JOIN departments d ON d.department = wd.department
-    JOIN approver_assignments aa ON aa.department_id = d.id
-    WHERE aa.user_id = ?
-    AND lr.status = 'Pending'
-    ORDER BY lr.date_applied DESC;";
+            lr.application_no,
+            u.name AS employee,
+            d.department,
+            lr.leave_type,
+            lr.date_from,
+            lr.date_to,
+            lr.status,
+            lr.remarks,
+            lr.date_applied
+        FROM leave_requests AS lr
+        INNER JOIN users AS u ON lr.user_id = u.id
+        INNER JOIN work_details AS wd ON u.id = wd.user_id
+        INNER JOIN departments AS d ON d.department = wd.department
+        INNER JOIN approver_assignments AS aa ON aa.department_id = d.id
+        WHERE aa.user_id = ?
+          AND lr.status = 'Pending'
+        ORDER BY lr.date_applied DESC
+    ";
 
     $stmt = $conn->prepare($sqlPending);
     $stmt->bind_param("i", $approver_id);
