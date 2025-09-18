@@ -59,12 +59,41 @@
                         <li class="nav-item">
                         <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
                         </li>
-                        <li class="nav-item">
-                        <a class="nav-link" href="leave_application.php"><i class="fa fa-file"></i> Application</a>
+
+                        <!-- ✅ Application Dropdown -->
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="applicationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-file"></i> Application
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="applicationDropdown">
+                            <li><a class="dropdown-item" href="leave_application.php"><i class="fa fa-plane"></i> Leave Application</a></li>
+                            <li><a class="dropdown-item" href="overtime.php"><i class="fa fa-clock"></i> Overtime</a></li>
+                            <li><a class="dropdown-item" href="official_business.php"><i class="fa fa-briefcase"></i> Official Business</a></li>
+                            <li><a class="dropdown-item" href="change_schedule.php"><i class="fa fa-calendar-check"></i> Change Schedule</a></li>
+                            <li><a class="dropdown-item" href="failure_clock.php"><i class="fa fa-exclamation-triangle"></i> Failure to Clock</a></li>
+                            <li><a class="dropdown-item" href="clock_alteration.php"><i class="fa fa-edit"></i> Clock Alteration</a></li>
+                            <li><a class="dropdown-item" href="work_restday.php"><i class="fa fa-sun"></i> Work Rest Day</a></li>
+                        </ul>
                         </li>
-                        <li class="nav-item">
-                        <a class="nav-link" href="pending_leaves.php"><i class="fa fa-circle-check"></i> For Approving</a>
+                        <!-- ✅ End Application Dropdown -->
+                        
+                        <!-- ✅ Approving Dropdown -->
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="approvingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-circle-check"></i> Approving
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="approvingDropdown">
+                            <li><a class="dropdown-item" href="pending_leaves.php"><i class="fa fa-plane"></i> Leave </a></li>
+                            <li><a class="dropdown-item" href="approver_overtime.php"><i class="fa fa-clock"></i> Overtime</a></li>
+                            <li><a class="dropdown-item" href="approver_official_business.php"><i class="fa fa-briefcase"></i> Official Business</a></li>
+                            <li><a class="dropdown-item" href="approver_change_schedule.php"><i class="fa fa-calendar-check"></i> Change Schedule</a></li>
+                            <li><a class="dropdown-item" href="approver_failure_clock.php"><i class="fa fa-exclamation-triangle"></i> Failure to Clock</a></li>
+                            <li><a class="dropdown-item" href="approver_clock_alteration.php"><i class="fa fa-edit"></i> Clock Alteration</a></li>
+                            <li><a class="dropdown-item" href="approver_work_restday.php"><i class="fa fa-sun"></i> Work Rest Day</a></li>
+                        </ul>
                         </li>
+                        <!-- ✅ End Approving Dropdown -->
+
                         <li class="nav-item">
                         <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
                         </li>
@@ -88,22 +117,22 @@
         <!-- WELCOME, DETAILS CODE -->
         <div class="container mt-5">
             <div class="card p-4">
-                 <!-- Top-right day and date -->
-                <div class="position-absolute top-3 end-0 p-2 text-muted">
-                    <h4><?= date('l, F j, Y'); ?></h4>
+                <!-- Row for Welcome + Date -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="mb-0">
+                        Welcome, <?= htmlspecialchars($user['name']); ?> 👋
+                        <!-- Toggle button -->
+                        <button class="btn btn-sm btn-outline-primary ms-2" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#userDetails" 
+                                aria-expanded="false" aria-controls="userDetails">
+                            ▼
+                        </button>
+                    </h2>
+                    <h5 class="text-muted mb-0"><?= date('l, F j, Y'); ?></h5>
                 </div>
 
-                <!-- Always visible -->
-                <h2 class="mb-3">
-                    Welcome, <?= htmlspecialchars($user['name']); ?> 👋
-                    <!-- Toggle button -->
-                    <button class="btn btn-sm btn-outline-primary ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#userDetails" aria-expanded="false" aria-controls="userDetails">
-                        ▼
-                    </button>
-                </h2>
-
-                <!-- Hidden details (dropdown) -->
-                <div class="collapse mt-3" id="userDetails">
+        <!-- Hidden details (dropdown) -->
+        <div class="collapse mt-3" id="userDetails">
 
                    <!-- Profile Picture -->
                     <?php 

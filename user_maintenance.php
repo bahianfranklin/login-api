@@ -15,7 +15,66 @@ $activeTab = $_GET['tab'] ?? 'user_management';
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     </head>
-    <body class="container mt-4">
+    <body class="container mt-4">    		
+                <!-- ✅ NAVIGATION BAR -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+
+                    <!-- Toggle button for mobile -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navbar Links -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
+                        </li>
+
+                        <!-- ✅ Application Dropdown -->
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="applicationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-file"></i> Application
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="applicationDropdown">
+                            <li><a class="dropdown-item" href="leave_application.php"><i class="fa fa-plane"></i> Leave Application</a></li>
+                            <li><a class="dropdown-item" href="overtime.php"><i class="fa fa-clock"></i> Overtime</a></li>
+                            <li><a class="dropdown-item" href="official_business.php"><i class="fa fa-briefcase"></i> Official Business</a></li>
+                            <li><a class="dropdown-item" href="change_schedule.php"><i class="fa fa-calendar-check"></i> Change Schedule</a></li>
+                            <li><a class="dropdown-item" href="failure_clock.php"><i class="fa fa-exclamation-triangle"></i> Failure to Clock</a></li>
+                            <li><a class="dropdown-item" href="clock_alteration.php"><i class="fa fa-edit"></i> Clock Alteration</a></li>
+                            <li><a class="dropdown-item" href="work_restday.php"><i class="fa fa-sun"></i> Work Rest Day</a></li>
+                        </ul>
+                        </li>
+                        <!-- ✅ End Application Dropdown -->
+
+                        <li class="nav-item">
+                        <a class="nav-link" href="pending_leaves.php"><i class="fa fa-circle-check"></i> For Approving</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="directory.php"><i class="fa fa-building"></i> Directory</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="contact_details.php"><i class="fas fa-address-book"></i> Contact Details</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="calendar1.php"><i class="fa fa-calendar"></i> Calendar</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="maintenance.php"><i class="fa fa-cogs"></i> Maintenance</a>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+                </nav>
         <br>
         <h3 class="m-0">User Maintenance</h3>
         <br>
@@ -48,6 +107,9 @@ $activeTab = $_GET['tab'] ?? 'user_management';
                 <?php include 'approver_maintenance1.php'; ?>
             </div>
         </div>
+        
+        <!-- Bootstrap JS (includes Popper) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     </body
 

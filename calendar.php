@@ -121,7 +121,7 @@
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
-
+        
         <!-- Add Event Modal -->
         <div class="modal fade" id="addEventModal" tabindex="-1">
             <div class="modal-dialog">

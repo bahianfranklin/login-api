@@ -1,62 +1,74 @@
 <?php
-    session_start();
-    require 'db.php';
+session_start();
+require 'db.php';
 
-    $approver_id = $_SESSION['user_id'] ?? null;
-    if (!$approver_id) {
-        die("Not logged in");
-    }
+$approver_id = $_SESSION['user_id'] ?? null;
+if (!$approver_id) {
+    die("Not logged in");
+}
 
-    // 🔹 Pending requests
-    // Improved: Readable SQL, consistent aliases, and comments
-    $sqlPending = "
-        SELECT 
-            lr.application_no,
-            u.name AS employee,
-            d.department,
-            lr.leave_type,
-            lr.date_from,
-            lr.date_to,
-            lr.status,
-            lr.remarks,
-            lr.date_applied
-        FROM leave_requests AS lr
-        INNER JOIN users AS u ON lr.user_id = u.id
-        INNER JOIN work_details AS wd ON u.id = wd.user_id
-        INNER JOIN departments AS d ON d.department = wd.department
-        INNER JOIN approver_assignments AS aa ON aa.department_id = d.id
-        WHERE aa.user_id = ?
-          AND lr.status = 'Pending'
-        ORDER BY lr.date_applied DESC
-    ";
+/**
+ * 🔹 Pending Work Restday Requests
+ */
+$sqlPending = "
+    SELECT 
+        wr.application_no,
+        u.name AS employee,
+        d.department,
+        wr.date,
+        wr.from_time,
+        wr.to_time,
+        wr.work_schedule,
+        wr.status,
+        wr.datetime_applied
+    FROM work_restday AS wr
+    INNER JOIN users AS u ON wr.applied_by = u.id
+    INNER JOIN work_details AS wd ON u.id = wd.user_id
+    INNER JOIN departments AS d ON d.department = wd.department
+    INNER JOIN approver_assignments AS aa ON aa.department_id = d.id
+    WHERE aa.user_id = ?
+      AND wr.status = 'Pending'
+    ORDER BY wr.datetime_applied DESC
+";
 
-    $stmt = $conn->prepare($sqlPending);
-    $stmt->bind_param("i", $approver_id);
-    $stmt->execute();
-    $pending = $stmt->get_result();
+$stmt = $conn->prepare($sqlPending);
+$stmt->bind_param("i", $approver_id);
+$stmt->execute();
+$pending = $stmt->get_result();
 
-    // 🔹 Approved requests
-    $sqlApproved = "
-        SELECT lr.application_no, u.name AS employee, d.department, 
-            lr.leave_type, lr.date_from, lr.date_to, lr.status, lr.date_action, lr.remarks
-        FROM leave_requests lr
-        JOIN users u ON lr.user_id = u.id
-        JOIN work_details wd ON u.id = wd.user_id
-        JOIN departments d ON wd.department = d.department
-        JOIN approver_assignments aa ON aa.department_id = d.id
-        WHERE aa.user_id = ?
-        AND lr.status = 'Approved'
-        ORDER BY lr.date_action DESC";
+/**
+ * 🔹 Approved Work Restday Requests
+ */
+$sqlApproved = "
+    SELECT 
+        wr.application_no,
+        u.name AS employee,
+        d.department,
+        wr.date,
+        wr.from_time,
+        wr.to_time,
+        wr.work_schedule,
+        wr.status,
+        wr.datetime_action
+    FROM work_restday wr
+    JOIN users u ON wr.applied_by = u.id
+    JOIN work_details wd ON u.id = wd.user_id
+    JOIN departments d ON wd.department = d.department
+    JOIN approver_assignments aa ON aa.department_id = d.id
+    WHERE aa.user_id = ?
+      AND wr.status = 'Approved'
+    ORDER BY wr.datetime_action DESC
+";
 
-    $stmt2 = $conn->prepare($sqlApproved);
-    $stmt2->bind_param("i", $approver_id);
-    $stmt2->execute();
-    $approved = $stmt2->get_result();
+$stmt2 = $conn->prepare($sqlApproved);
+$stmt2->bind_param("i", $approver_id);
+$stmt2->execute();
+$approved = $stmt2->get_result();
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Approver Dashboard</title>
+    <title>Approver - Work Restday</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -140,13 +152,13 @@
     <br>
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Leaves (PENDING | APPROVED)</h3>
+        <h3>Work Restday (PENDING | APPROVED)</h3>
     </div>
 
     <!-- Pending Requests -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-warning text-dark fw-bold">
-            Pending Leave Requests
+            Pending Work Restday Requests
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -156,11 +168,11 @@
                             <th>Application No</th>
                             <th>Employee</th>
                             <th>Department</th>
-                            <th>Leave Type</th>
-                            <th>From</th>
-                            <th>To</th>
+                            <th>Date</th>
+                            <th>From Time</th>
+                            <th>To Time</th>
+                            <th>Work Schedule</th>
                             <th>Status</th>
-                            <th>Remarks</th>
                             <th>Date Applied</th>
                             <th>Action</th>
                         </tr>
@@ -171,19 +183,19 @@
                             <td><?= $row['application_no'] ?></td>
                             <td><?= $row['employee'] ?></td>
                             <td><?= $row['department'] ?></td>
-                            <td><?= $row['leave_type'] ?></td>
-                            <td><?= $row['date_from'] ?></td>
-                            <td><?= $row['date_to'] ?></td>
+                            <td><?= $row['date'] ?></td>
+                            <td><?= $row['from_time'] ?></td>
+                            <td><?= $row['to_time'] ?></td>
+                            <td><?= $row['work_schedule'] ?></td>
                             <td><span class="badge bg-warning text-dark"><?= $row['status'] ?></span></td>
-                            <td><?= $row['remarks'] ?></td>
-                            <td><?= $row['date_applied'] ?></td>
+                            <td><?= $row['datetime_applied'] ?></td>
                             <td class="d-flex gap-1">
-                                <form method="POST" action="update_leave_status.php">
+                                <form method="POST" action="update_work_restday_status.php">
                                     <input type="hidden" name="application_no" value="<?= $row['application_no'] ?>">
                                     <input type="hidden" name="action" value="Approved">
                                     <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                 </form>
-                                <form method="POST" action="update_leave_status.php">
+                                <form method="POST" action="update_work_restday_status.php">
                                     <input type="hidden" name="application_no" value="<?= $row['application_no'] ?>">
                                     <input type="hidden" name="action" value="Rejected">
                                     <button type="submit" class="btn btn-danger btn-sm">Reject</button>
@@ -200,7 +212,7 @@
     <!-- Approved Requests -->
     <div class="card shadow-sm">
         <div class="card-header bg-success text-white fw-bold">
-            Approved Leave Requests
+            Approved Work Restday Requests
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -210,12 +222,12 @@
                             <th>Application No</th>
                             <th>Employee</th>
                             <th>Department</th>
-                            <th>Leave Type</th>
-                            <th>From</th>
-                            <th>To</th>
+                            <th>Date</th>
+                            <th>From Time</th>
+                            <th>To Time</th>
+                            <th>Work Schedule</th>
                             <th>Status</th>
                             <th>Date Action</th>
-                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -224,12 +236,12 @@
                             <td><?= $row['application_no'] ?></td>
                             <td><?= $row['employee'] ?></td>
                             <td><?= $row['department'] ?></td>
-                            <td><?= $row['leave_type'] ?></td>
-                            <td><?= $row['date_from'] ?></td>
-                            <td><?= $row['date_to'] ?></td>
+                            <td><?= $row['date'] ?></td>
+                            <td><?= $row['from_time'] ?></td>
+                            <td><?= $row['to_time'] ?></td>
+                            <td><?= $row['work_schedule'] ?></td>
                             <td><span class="badge bg-success"><?= $row['status'] ?></span></td>
-                            <td><?= $row['date_action'] ?></td>
-                            <td><?= $row['remarks'] ?></td>
+                            <td><?= $row['datetime_action'] ?></td>
                         </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -237,7 +249,7 @@
             </div>
         </div>
     </div>
-<a href="view.php" class="btn btn-primary mt-3">BACK</a>
+    <a href="view.php" class="btn btn-primary mt-3">BACK</a>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

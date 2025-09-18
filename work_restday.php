@@ -55,11 +55,51 @@
     }
 
     /** ========== FETCH ========= */
+    // ✅ Build filter conditions
+    $where = [];
+    $params = [];
+    $types  = "";
+
+    // 📅 Date range filter
+    if (!empty($_GET['date_range'])) {
+        $range = explode(" to ", $_GET['date_range']);
+        if (count($range) == 2) {
+            $from = $range[0];
+            $to   = $range[1];
+            $where[] = "wr.date BETWEEN ? AND ?";
+            $params[] = $from;
+            $params[] = $to;
+            $types   .= "ss";
+        }
+    }
+
+    // ✅ Status filter
+    if (!empty($_GET['status'])) {
+        $where[] = "wr.status = ?";
+        $params[] = $_GET['status'];
+        $types   .= "s";
+    }
+
+    // ✅ Build final SQL
     $sql = "SELECT wr.*, u.username 
             FROM work_restday wr 
-            JOIN users u ON wr.applied_by = u.id 
-            ORDER BY wr.datetime_applied DESC";
-    $result = $conn->query($sql);
+            JOIN users u ON wr.applied_by = u.id";
+
+    // Add WHERE if needed
+    if (!empty($where)) {
+        $sql .= " WHERE " . implode(" AND ", $where);
+    }
+
+    $sql .= " ORDER BY wr.datetime_applied DESC";
+
+    // ✅ Run query with params if needed
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
 ?>
 
 <!DOCTYPE html>
@@ -68,12 +108,94 @@
         <meta charset="UTF-8">
         <title>Work on Rest Day Requests</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
-    <body class="bg-light">
+    <body class="container mt-4">    		
+                <!-- ✅ NAVIGATION BAR -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+
+                    <!-- Toggle button for mobile -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navbar Links -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                        <a class="nav-link" href="view.php"><i class="fa fa-home"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="log_history.php"><i class="fa fa-clock"></i> Log History</a>
+                        </li>
+
+                        <!-- ✅ Application Dropdown -->
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="applicationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-file"></i> Application
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="applicationDropdown">
+                            <li><a class="dropdown-item" href="leave_application.php"><i class="fa fa-plane"></i> Leave Application</a></li>
+                            <li><a class="dropdown-item" href="overtime.php"><i class="fa fa-clock"></i> Overtime</a></li>
+                            <li><a class="dropdown-item" href="official_business.php"><i class="fa fa-briefcase"></i> Official Business</a></li>
+                            <li><a class="dropdown-item" href="change_schedule.php"><i class="fa fa-calendar-check"></i> Change Schedule</a></li>
+                            <li><a class="dropdown-item" href="failure_clock.php"><i class="fa fa-exclamation-triangle"></i> Failure to Clock</a></li>
+                            <li><a class="dropdown-item" href="clock_alteration.php"><i class="fa fa-edit"></i> Clock Alteration</a></li>
+                            <li><a class="dropdown-item" href="work_restday.php"><i class="fa fa-sun"></i> Work Rest Day</a></li>
+                        </ul>
+                        </li>
+                        <!-- ✅ End Application Dropdown -->
+
+                        <li class="nav-item">
+                        <a class="nav-link" href="pending_leaves.php"><i class="fa fa-circle-check"></i> For Approving</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="directory.php"><i class="fa fa-building"></i> Directory</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="contact_details.php"><i class="fas fa-address-book"></i> Contact Details</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="calendar1.php"><i class="fa fa-calendar"></i> Calendar</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" href="maintenance.php"><i class="fa fa-cogs"></i> Maintenance</a>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+                </nav>
         <div class="container mt-5">
             <div class="d-flex justify-content-between mb-3">
                 <h3>Work on Rest Day Requests</h3>
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">+ Apply Work Rest Day</button>
+            </div>
+
+            <div class="card mb-3 p-3">
+                <form method="GET" class="row g-2">
+                    <div class="col-md-4">
+                        <input type="text" name="date_range" class="form-control dateRangePicker" 
+                            placeholder="Select Date Range" value="<?= $_GET['date_range'] ?? '' ?>">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="Pending" <?= ($_GET['status'] ?? '')=="Pending"?"selected":"" ?>>Pending</option>
+                            <option value="Approved" <?= ($_GET['status'] ?? '')=="Approved"?"selected":"" ?>>Approved</option>
+                            <option value="Rejected" <?= ($_GET['status'] ?? '')=="Rejected"?"selected":"" ?>>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
             </div>
 
             <table class="table table-bordered table-hover bg-white">
@@ -92,15 +214,24 @@
                 </thead>
                 <tbody>
                 <?php $i=1; while($row=$result->fetch_assoc()): ?>
+
+                    <?php
+                   // Status badge
+                    $statusClass = "secondary";
+                    if ($row['status'] == "Pending")  $statusClass = "warning";
+                    if ($row['status'] == "Approved") $statusClass = "success";
+                    if ($row['status'] == "Rejected") $statusClass = "danger";
+                    ?>
+
                     <tr>
                         <td><?= $i++ ?></td>
                         <td><?= $row['application_no'] ?></td>
                         <td><?= $row['username'] ?></td>
                         <td><?= $row['date'] ?></td>
-                        <td><?= $row['from_time'] ?></td>
-                        <td><?= $row['to_time'] ?></td>
+                        <td><?= date("h:i A", strtotime($row['from_time'])) ?></td>
+                        <td><?= date("h:i A", strtotime($row['to_time'])) ?></td>
                         <td><?= $row['work_schedule'] ?></td>
-                        <td><?= $row['status'] ?></td>
+                        <td><span class="badge bg-<?= $statusClass ?>"><?= $row['status'] ?></span></td>
                         <td>
                             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>">Edit</button>
                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?= $row['id'] ?>">Delete</button>
@@ -199,13 +330,28 @@
             </div>
         </div>
 
+        <script>
+            // For Date Range Picker
+            flatpickr(".dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                onClose: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 2) {
+                        const from = instance.formatDate(selectedDates[0], "Y-m-d");
+                        const to   = instance.formatDate(selectedDates[1], "Y-m-d");
+                        instance.input.value = `${from} to ${to}`;
+                    }
+                }
+            });
+
+            // For Time Picker (12-hour format with AM/PM)
+            flatpickr(".timepicker", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "h:i K",  // 12-hour format with AM/PM
+                time_24hr: false
+            });
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>`
-        <a href="view.php" class="btn btn-primary mt-3">BACK</a> 
-        <a href="official_business.php" class="btn btn-danger mt-3">OFFICAL BUSINESS</a>
-        <a href="change_schedule.php" class="btn btn-danger mt-3">CHANGE SCHEDULE</a>
-        <a href="failure_clock.php" class="btn btn-danger mt-3">FAILURE CLOCK</a>
-        <a href="clock_alteration.php" class="btn btn-danger mt-3">CLOCK ALTERATION</a>
-        <a href="work_restday.php" class="btn btn-danger mt-3">WORK RESTDAY</a>
-        <a href="overtime.php" class="btn btn-danger mt-3">OVERTIME</a>
     </body>
 </html>
