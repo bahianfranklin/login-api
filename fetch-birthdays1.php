@@ -48,4 +48,28 @@ while ($row = $sql->fetch_assoc()) {
     ];
 }
 
+/**
+ * 🌴 Fetch Approved Leaves (split per day)
+ */
+$sql = $conn->query("SELECT lr.id, u.name, lr.leave_type, lr.date_from, lr.date_to 
+                     FROM leave_requests lr
+                     JOIN users u ON u.id = lr.user_id
+                     WHERE lr.status = 'Approved'");
+
+while ($row = $sql->fetch_assoc()) {
+    $start = strtotime($row['date_from']);
+    $end   = strtotime($row['date_to']);
+
+    // Loop each day in the range
+    for ($d = $start; $d <= $end; $d = strtotime("+1 day", $d)) {
+        $events[] = [
+            'id'     => "leave-" . $row['id'] . "-" . date('Ymd', $d),
+            'title'  => $row['name'] . " (" . $row['leave_type'] . " Leave)",
+            'start'  => date('Y-m-d', $d),
+            'allDay' => true,
+            'color'  => '#007bff'
+        ];
+    }
+}
+
 echo json_encode($events, JSON_UNESCAPED_UNICODE);

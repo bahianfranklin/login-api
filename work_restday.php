@@ -56,7 +56,7 @@
 
     /** ========== FETCH ========= */
     // ✅ Build filter conditions
-    $where = [];
+    $where = ["wr.applied_by = $user_id"];
     $params = [];
     $types  = "";
 

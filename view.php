@@ -76,7 +76,7 @@
                         </ul>
                         </li>
                         <!-- ✅ End Application Dropdown -->
-                        
+  
                         <!-- ✅ Approving Dropdown -->
                         <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="approvingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -217,6 +217,47 @@
                         </div>
                     </div>
             </div>
+        
+            <div class="card mb-3">
+                <div class="card-header bg-danger">Pending</div>
+                    <div class="card-body">
+                        <li><a class="dropdown-item" href="pending_leaves.php">
+                            <i class="fa fa-plane"></i> Leave 
+                            <span class="badge bg-danger" id="pendingLeaves">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_overtime.php">
+                            <i class="fa fa-clock"></i> Overtime 
+                            <span class="badge bg-danger" id="pendingOvertime">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_official_business.php">
+                            <i class="fa fa-briefcase"></i> Official Business 
+                            <span class="badge bg-danger" id="pendingOB">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_change_schedule.php">
+                            <i class="fa fa-calendar-check"></i> Change Schedule 
+                            <span class="badge bg-danger" id="pendingCS">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_failure_clock.php">
+                            <i class="fa fa-exclamation-triangle"></i> Failure to Clock 
+                            <span class="badge bg-danger" id="pendingFC">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_clock_alteration.php">
+                            <i class="fa fa-edit"></i> Clock Alteration 
+                            <span class="badge bg-danger" id="pendingCA">0</span>
+                        </a></li>
+
+                        <li><a class="dropdown-item" href="approver_work_restday.php">
+                            <i class="fa fa-sun"></i> Work Rest Day 
+                            <span class="badge bg-danger" id="pendingWR">0</span>
+                        </a></li>
+                    </div>
+                </div>
+            </div>
         </div>
 
     <script>
@@ -276,6 +317,20 @@
                     `;
                 } else {
                     document.getElementById("payrollSection").innerHTML = "<p>No payroll period found</p>";
+                }
+
+                // ✅ Update Pending Approvals (only for approvers)
+                if (data.pending) {
+                    document.getElementById("pendingLeaves").innerText = data.pending.leaves;
+                    document.getElementById("pendingOvertime").innerText = data.pending.overtime;
+                    document.getElementById("pendingOB").innerText = data.pending.official_business;
+                    document.getElementById("pendingCS").innerText = data.pending.change_schedule;
+                    document.getElementById("pendingFC").innerText = data.pending.failure_clock;
+                    document.getElementById("pendingCA").innerText = data.pending.clock_alteration;
+                    document.getElementById("pendingWR").innerText = data.pending.work_restday;
+                    document.querySelector(".card.bg-danger").style.display = "block"; // show card
+                } else {
+                    document.querySelector(".card.bg-danger").style.display = "none"; // hide card if not approver
                 }
             });
     }

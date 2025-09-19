@@ -27,10 +27,11 @@
         $appNo = "CA-" . $today . "-" . str_pad($countToday, 2, "0", STR_PAD_LEFT);
 
         $stmt = $conn->prepare("INSERT INTO clock_alteration 
-            (application_no, date_original, time_in_original, time_out_original, date_new, time_in_new, time_out_new, reason, applied_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            (application_no, date_original, time_in_original, time_out_original, date_new, time_in_new, time_out_new, reason, status, applied_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
         $stmt->bind_param("ssssssssi", $appNo, $date_original, $time_in_original, $time_out_original, 
-                        $date_new, $time_in_new, $time_out_new, $reason, $user_id);
+                $date_new, $time_in_new, $time_out_new, $reason, $user_id);
+
         $stmt->execute();
     }
 

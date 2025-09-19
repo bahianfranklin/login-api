@@ -8,6 +8,8 @@
         exit();
     }
 
+    $user_id = $_SESSION['user_id'];  // ✅ define it here
+
     // Get search keyword and date range from GET
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $from = isset($_GET['from']) ? trim($_GET['from']) : '';
@@ -22,6 +24,11 @@
     $conditions = [];
     $params = [];
     $types = '';
+
+    // ✅ Add user restriction first
+    $conditions[] = "l.user_id = ?";
+    $params[] = $user_id;
+    $types .= 'i';
 
     // Add search condition
     if ($search !== '') {
@@ -173,7 +180,7 @@
                 </div>
                 </nav>
         <div class="container mt-5">
-            <h3>Login / Logout History (All Users)</h3>
+            <h4>Login / Logout History</h4>
             <br>
             <!-- Search form with From/To dates -->
             <form method="get" class="mb-3 row g-2 align-items-end">

@@ -6,6 +6,8 @@
         die("Please login first.");
     }
 
+    $user_id = (int)$_SESSION['user_id'];
+
     // Handle Add Leave Request
     if (isset($_POST['action']) && $_POST['action'] === 'add') {
         $user_id = $_SESSION['user_id'];
@@ -59,7 +61,7 @@
 
     // Filtering logic
     
-    $where = [];
+    $where = ["lr.user_id = $user_id"];
     if(!empty($_GET['date_range'])){
         $dates = explode(" to ", $_GET['date_range']);
     if(count($dates) == 2 && !empty($dates[0]) && !empty($dates[1])){

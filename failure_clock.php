@@ -52,7 +52,7 @@
     }
 
     /** ========== FETCH ========= */
-    $where = [];
+    $where = ["fc.applied_by = $user_id"];
 
     // Date Range Filter
     if (!empty($_GET['date_range'])) {

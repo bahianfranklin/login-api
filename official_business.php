@@ -53,7 +53,7 @@
     }
 
     /** ========== FETCH ========= */
-    $where = [];
+    $where = ["ob.applied_by = $user_id"];
 
     // Date Range
     if (!empty($_GET['date_range'])) {

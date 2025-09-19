@@ -58,7 +58,7 @@
     }
 
     /** ========== FETCH ========= */
-    $where = [];
+    $where = ["ot.applied_by = $user_id"];
     $params = [];
     $types  = "";
 

@@ -148,10 +148,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && (isset($_POST['delete_event']) || (
                         </ul>
                         </li>
                         <!-- ✅ End Application Dropdown -->
-
-                        <li class="nav-item">
-                        <a class="nav-link" href="pending_leaves.php"><i class="fa fa-circle-check"></i> For Approving</a>
+  
+                        <!-- ✅ Approving Dropdown -->
+                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="approvingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-circle-check"></i> Approving
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="approvingDropdown">
+                            <li><a class="dropdown-item" href="pending_leaves.php"><i class="fa fa-plane"></i> Leave </a></li>
+                            <li><a class="dropdown-item" href="approver_overtime.php"><i class="fa fa-clock"></i> Overtime</a></li>
+                            <li><a class="dropdown-item" href="approver_official_business.php"><i class="fa fa-briefcase"></i> Official Business</a></li>
+                            <li><a class="dropdown-item" href="approver_change_schedule.php"><i class="fa fa-calendar-check"></i> Change Schedule</a></li>
+                            <li><a class="dropdown-item" href="approver_failure_clock.php"><i class="fa fa-exclamation-triangle"></i> Failure to Clock</a></li>
+                            <li><a class="dropdown-item" href="approver_clock_alteration.php"><i class="fa fa-edit"></i> Clock Alteration</a></li>
+                            <li><a class="dropdown-item" href="approver_work_restday.php"><i class="fa fa-sun"></i> Work Rest Day</a></li>
+                        </ul>
                         </li>
+                        <!-- ✅ End Approving Dropdown -->
+
                         <li class="nav-item">
                         <a class="nav-link" href="user_maintenance.php"><i class="fa fa-users"></i> Users Info</a>
                         </li>
@@ -239,7 +253,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && (isset($_POST['delete_event']) || (
         </div>
         <div style="margin-bottom: 8px;">
         <span style="display:inline-block; width:16px; height:16px; background:#007bff; margin-right:6px; border-radius:3px;"></span>
-        Custom 📌
+        Schedule Leaves 📌
         </div>
         <div style="margin-bottom: 8px;">
         <span style="display:inline-block; width:16px; height:16px; background:#6c757d; margin-right:6px; border-radius:3px;"></span>
